@@ -1,10 +1,307 @@
-!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>ChemBuddy</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChemBuddy - Periodic Table</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .search-box {
+            display: block;
+            width: min(500px, 90%);
+            margin: 0 auto 25px;
+            padding: 12px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(45px, 1fr));
+            gap: 5px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .element {
+            min-height: 75px;
+            padding: 6px;
+            border: 1px solid #aaa;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .element:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .number {
+            font-size: 11px;
+            text-align: left;
+            color: #666;
+        }
+
+        .symbol {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .name {
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .info {
+            max-width: 500px;
+            margin: 25px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 10px;
+            }
+
+            .periodic-table {
+                grid-template-columns: repeat(18, 55px);
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+
+            .element {
+                min-height: 70px;
+            }
+        }
+    </style>
 </head>
+
 <body>
+
     <h1>🧪 ChemBuddy</h1>
-    <h2>Periodic Table</h2>
+    <p class="subtitle">Interactive Periodic Table</p>
+
+    <input
+        type="text"
+        id="search"
+        class="search-box"
+        placeholder="🔍 Search element..."
+        oninput="searchElement()"
+    >
+
+    <div id="periodicTable" class="periodic-table"></div>
+
+    <div id="info" class="info">
+        <h2>⚛️ Element Information</h2>
+        <p>Click any element to see its details.</p>
+    </div>
+
+    <script>
+
+        const elements = [
+            ["H","Hydrogen",1,1.008],
+            ["He","Helium",2,4.0026],
+            ["Li","Lithium",3,6.94],
+            ["Be","Beryllium",4,9.0122],
+            ["B","Boron",5,10.81],
+            ["C","Carbon",6,12.011],
+            ["N","Nitrogen",7,14.007],
+            ["O","Oxygen",8,15.999],
+            ["F","Fluorine",9,18.998],
+            ["Ne","Neon",10,20.180],
+            ["Na","Sodium",11,22.990],
+            ["Mg","Magnesium",12,24.305],
+            ["Al","Aluminium",13,26.982],
+            ["Si","Silicon",14,28.085],
+            ["P","Phosphorus",15,30.974],
+            ["S","Sulfur",16,32.06],
+            ["Cl","Chlorine",17,35.45],
+            ["Ar","Argon",18,39.948],
+            ["K","Potassium",19,39.098],
+            ["Ca","Calcium",20,40.078],
+            ["Sc","Scandium",21,44.956],
+            ["Ti","Titanium",22,47.867],
+            ["V","Vanadium",23,50.942],
+            ["Cr","Chromium",24,51.996],
+            ["Mn","Manganese",25,54.938],
+            ["Fe","Iron",26,55.845],
+            ["Co","Cobalt",27,58.933],
+            ["Ni","Nickel",28,58.693],
+            ["Cu","Copper",29,63.546],
+            ["Zn","Zinc",30,65.38],
+            ["Ga","Gallium",31,69.723],
+            ["Ge","Germanium",32,72.630],
+            ["As","Arsenic",33,74.922],
+            ["Se","Selenium",34,78.971],
+            ["Br","Bromine",35,79.904],
+            ["Kr","Krypton",36,83.798],
+            ["Rb","Rubidium",37,85.468],
+            ["Sr","Strontium",38,87.62],
+            ["Y","Yttrium",39,88.906],
+            ["Zr","Zirconium",40,91.224],
+            ["Nb","Niobium",41,92.906],
+            ["Mo","Molybdenum",42,95.95],
+            ["Tc","Technetium",43,98],
+            ["Ru","Ruthenium",44,101.07],
+            ["Rh","Rhodium",45,102.91],
+            ["Pd","Palladium",46,106.42],
+            ["Ag","Silver",47,107.87],
+            ["Cd","Cadmium",48,112.41],
+            ["In","Indium",49,114.82],
+            ["Sn","Tin",50,118.71],
+            ["Sb","Antimony",51,121.76],
+            ["Te","Tellurium",52,127.60],
+            ["I","Iodine",53,126.90],
+            ["Xe","Xenon",54,131.29],
+            ["Cs","Caesium",55,132.91],
+            ["Ba","Barium",56,137.33],
+            ["La","Lanthanum",57,138.91],
+            ["Ce","Cerium",58,140.12],
+            ["Pr","Praseodymium",59,140.91],
+            ["Nd","Neodymium",60,144.24],
+            ["Pm","Promethium",61,145],
+            ["Sm","Samarium",62,150.36],
+            ["Eu","Europium",63,151.96],
+            ["Gd","Gadolinium",64,157.25],
+            ["Tb","Terbium",65,158.93],
+            ["Dy","Dysprosium",66,162.50],
+            ["Ho","Holmium",67,164.93],
+            ["Er","Erbium",68,167.26],
+            ["Tm","Thulium",69,168.93],
+            ["Yb","Ytterbium",70,173.05],
+            ["Lu","Lutetium",71,174.97],
+            ["Hf","Hafnium",72,178.49],
+            ["Ta","Tantalum",73,180.95],
+            ["W","Tungsten",74,183.84],
+            ["Re","Rhenium",75,186.21],
+            ["Os","Osmium",76,190.23],
+            ["Ir","Iridium",77,192.22],
+            ["Pt","Platinum",78,195.08],
+            ["Au","Gold",79,196.97],
+            ["Hg","Mercury",80,200.59],
+            ["Tl","Thallium",81,204.38],
+            ["Pb","Lead",82,207.2],
+            ["Bi","Bismuth",83,208.98],
+            ["Po","Polonium",84,209],
+            ["At","Astatine",85,210],
+            ["Rn","Radon",86,222],
+            ["Fr","Francium",87,223],
+            ["Ra","Radium",88,226],
+            ["Ac","Actinium",89,227],
+            ["Th","Thorium",90,232.04],
+            ["Pa","Protactinium",91,231.04],
+            ["U","Uranium",92,238.03],
+            ["Np","Neptunium",93,237],
+            ["Pu","Plutonium",94,244],
+            ["Am","Americium",95,243],
+            ["Cm","Curium",96,247],
+            ["Bk","Berkelium",97,247],
+            ["Cf","Californium",98,251],
+            ["Es","Einsteinium",99,252],
+            ["Fm","Fermium",100,257],
+            ["Md","Mendelevium",101,258],
+            ["No","Nobelium",102,259],
+            ["Lr","Lawrencium",103,266],
+            ["Rf","Rutherfordium",104,267],
+            ["Db","Dubnium",105,268],
+            ["Sg","Seaborgium",106,269],
+            ["Bh","Bohrium",107,270],
+            ["Hs","Hassium",108,277],
+            ["Mt","Meitnerium",109,278],
+            ["Ds","Darmstadtium",110,281],
+            ["Rg","Roentgenium",111,282],
+            ["Cn","Copernicium",112,285],
+            ["Nh","Nihonium",113,286],
+            ["Fl","Flerovium",114,289],
+            ["Mc","Moscovium",115,290],
+            ["Lv","Livermorium",116,293],
+            ["Ts","Tennessine",117,294],
+            ["Og","Oganesson",118,294]
+        ];
+
+        const table = document.getElementById("periodicTable");
+
+        elements.forEach(element => {
+
+            const box = document.createElement("div");
+            box.className = "element";
+
+            box.innerHTML = `
+                <div class="number">${element[2]}</div>
+                <div class="symbol">${element[0]}</div>
+                <div class="name">${element[1]}</div>
+            `;
+
+            box.onclick = () => showInfo(element);
+
+            table.appendChild(box);
+        });
+
+        function showInfo(element) {
+
+            document.getElementById("info").innerHTML = `
+                <h2>${element[0]} — ${element[1]}</h2>
+                <p><b>Atomic Number:</b> ${element[2]}</p>
+                <p><b>Atomic Mass:</b> ${element[3]}</p>
+            `;
+        }
+
+        function searchElement() {
+
+            const search = document
+                .getElementById("search")
+                .value
+                .toLowerCase();
+
+            const boxes = document.querySelectorAll(".element");
+
+            boxes.forEach((box, index) => {
+
+                const symbol = elements[index][0].toLowerCase();
+                const name = elements[index][1].toLowerCase();
+
+                if (symbol.includes(search) || name.includes(search)) {
+                    box.style.display = "block";
+                } else {
+                    box.style.display = "none";
+                }
+
+            });
+        }
+
+    </script>
+
 </body>
 </html>
